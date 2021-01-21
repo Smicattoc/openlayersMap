@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+    <link rel="stylesheet"href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"crossorigin="anonymous">
+    <style>
+      .map {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+    <title>OpenLayers example</title>
+  </head>
+  <body>
+    <h2>My Map</h2>
+    <div class="container">
+        <div class="row">
+            <div class="col-1" style="margin: 0px 0px 0px -100px;">
+                Side bar
+            </div>
+            <div class="col-2">
+                <div id="map" class="map" style="width: 1200px; height: 500px;"></div>
+                    {% csrf_token %}
+                    <script type="text/javascript">
+
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    var map = new ol.Map({
+                        target: 'map',
+                        layers: [
+                        new ol.layer.Tile({
+                            source: new ol.source.OSM()
+                        })
+                        ],
+                        view: new ol.View({
+                        center: ol.proj.fromLonLat([37.41, 8.82]),
+                        zoom: 4
+                        })
+                    });
+                    
+                    map.on('click', function (evt) {
+                        console.log(evt.coordinate);
+                        coordinates = {"lat": evt.coordinate[0], "long": evt.coordinate[1]};
+                        
+                        fetch('./create_point', {
+                            headers: {'X-CSRFToken': csrftoken},
+                            method: 'post',
+                            body: JSON.stringify(coordinates),
+                        })
+
+                        let pointElements = document.getElementsByClassName('point');
+                        for (point of pointElements) {
+                          let lat = pointdataset.lat;
+                          let lon = pointdataset.lon
+                          const iconFeature = new ol.Feature({
+                            geometry: new ol.geom.Point([lat, lon])
+                          });
+                          point.onclick = () => {
+                            let marker = new ol.layer.Vector({
+                              source: new ol.source.Vector({
+                                features: [iconFeature]
+                              }),
+                              style: new ol.style.Style({
+                              image: new ol.style.Icon({
+                              anchor: [0.5, 46],
+                              anchorXUnits: 'fraction',
+                              anchorYUnits: 'pixels',
+                              src: 'https://openlayers.org/en/latest/examples/data/icon.png'
+                              })
+                              })
+                            })
+                          }
+                        }
+                        map.addLayer(layer);
+                    })
+
+                    </script>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
